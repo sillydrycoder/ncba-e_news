@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "221631606516",
+    "project_id": "ncba-clone",
+    "storage_bucket": "ncba-clone.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:221631606516:android:585e98543db916eb94b8a1",
+        "android_client_info": {
+          "package_name": "com.ncba.news"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA5bqoJuTdESj0pqBRPq2LXt-m21UeNF2U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

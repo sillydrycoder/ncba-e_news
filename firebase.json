@@ -1,0 +1,33 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "ncba-clone",
+          "appId": "1:221631606516:android:585e98543db916eb94b8a1",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "ncba-clone",
+          "configurations": {
+            "android": "1:221631606516:android:585e98543db916eb94b8a1",
+            "web": "1:221631606516:web:fa82fda60ccca5d594b8a1"
+          }
+        }
+      }
+    }
+  },
+  "hosting": {
+    "source": ".",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "frameworksBackend": {
+      "region": "us-central1"
+    }
+  }
+}

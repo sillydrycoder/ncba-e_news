@@ -1,0 +1,221 @@
+[
+  {
+    "insert" : "Welcome to Your Rich Text Editor!"
+  },
+  {
+    "insert" : "\n\n",
+    "attributes" : {
+      "heading" : 2
+    }
+  },
+  {
+    "insert" : "This is your canvas for creating and editing rich text content.  Let's get started:\n"
+  },
+  {
+    "insert" : "Basic Formatting",
+    "attributes" : {
+      "b" : true
+    }
+  },
+  {
+    "insert" : "\n"
+  },
+  {
+    "insert" : {
+      "_type" : "hr",
+      "_inline" : false
+    }
+  },
+  {
+    "insert" : "\nText Styles: Make your text "
+  },
+  {
+    "insert" : "bold",
+    "attributes" : {
+      "b" : true
+    }
+  },
+  {
+    "insert" : " (B), "
+  },
+  {
+    "insert" : "italic",
+    "attributes" : {
+      "i" : true
+    }
+  },
+  {
+    "insert" : " ( I ), or "
+  },
+  {
+    "insert" : "underline",
+    "attributes" : {
+      "u" : true
+    }
+  },
+  {
+    "insert" : " ( U ) it."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Headings: Organize your content with headings (H1, H2, H3, etc.)."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Lists: Create ordered (numbered) or unordered (bulleted) lists."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Alignment: Align text left, center, or right."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Indenting: Increase or decrease indents for paragraphs or lists."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Advanced Features",
+    "attributes" : {
+      "b" : true
+    }
+  },
+  {
+    "insert" : "\n"
+  },
+  {
+    "insert" : {
+      "_type" : "hr",
+      "_inline" : false
+    }
+  },
+  {
+    "insert" : "\nLinks: Insert clickable hyperlinks ( 🔗 )."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Images: Add visual elements to your text."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Code: Format code snippets for clarity."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Tips and Tricks",
+    "attributes" : {
+      "b" : true
+    }
+  },
+  {
+    "insert" : "\n"
+  },
+  {
+    "insert" : {
+      "_type" : "hr",
+      "_inline" : false
+    }
+  },
+  {
+    "insert" : "\nKeyboard Shortcuts: Use shortcuts to speed up your editing."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Preview: See how your content will look before publishing."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Save Often: Don't lose your work – save regularly."
+  },
+  {
+    "insert" : "\n",
+    "attributes" : {
+      "block" : "ol"
+    }
+  },
+  {
+    "insert" : "Need Help?",
+    "attributes" : {
+      "b" : true
+    }
+  },
+  {
+    "insert" : "\n"
+  },
+  {
+    "insert" : {
+      "_type" : "hr",
+      "_inline" : false
+    }
+  },
+  {
+    "insert" : "\n"
+  },
+  {
+    "insert" : "Toolbar:",
+    "attributes" : {
+      "b" : true
+    }
+  },
+  {
+    "insert" : " Explore the icons for different formatting options.\nLet's Get Creative! Start typing and explore the possibilities of this editor. It's designed to make your writing easier and more visually appealing.\n"
+  },
+  {
+    "insert" : "Happy editing!",
+    "attributes" : {
+      "c" : true
+    }
+  },
+  {
+    "insert" : "\n"
+  }
+]
