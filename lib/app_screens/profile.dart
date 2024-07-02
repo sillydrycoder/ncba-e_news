@@ -2,8 +2,10 @@ import 'dart:convert';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 
 class Profile extends StatefulWidget {
@@ -87,6 +89,7 @@ class _ProfileState extends State<Profile> {
                         String status =
                             newsList[index]['status'].toString().toLowerCase();
                         String content = newsList[index]['content'] ?? '';
+                        String thumbnailUrl = newsList[index]['thumbnailUrl'] ?? '';
                         return Container(
                           margin: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
@@ -100,6 +103,11 @@ class _ProfileState extends State<Profile> {
                           child: Column(
                             children: [
                               ListTile(
+                                leading: thumbnailUrl.isNotEmpty
+                                    ? Image.network(thumbnailUrl)
+                                    : null,
+
+
                                 title: Text(title),
                                 subtitle: Text(convertToPlainText(content)),
                               ),

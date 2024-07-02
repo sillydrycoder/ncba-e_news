@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ncba_news/app_sections/forgot_password.dart';
 import 'package:ncba_news/app_sections/signin.dart';
 import 'package:ncba_news/app_sections/signup.dart';
+
+import '../app_sections/forgot_password.dart';
 
 class Authenticate extends StatefulWidget {
   const Authenticate({super.key});
@@ -10,43 +11,45 @@ class Authenticate extends StatefulWidget {
   State<Authenticate> createState() => _AuthenticateState();
 }
 
-class _AuthenticateState extends State<Authenticate>  {
+class _AuthenticateState extends State<Authenticate> {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
       initialIndex: 0,
-      length: 3,
+      length: 2,
       child: Scaffold(
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
-          title: const Column(
-            children: [
-              SizedBox(height: 20.0),
-              Text('NCBA News', style: TextStyle(fontSize: 35.0, fontWeight: FontWeight.bold)),
+          title: const Text(
+            'NCBA News',
+            style: TextStyle(fontSize: 35.0, fontWeight: FontWeight.bold),
+          ),
+          bottom: const TabBar(
+            tabs: <Widget>[
+              Tab(text: 'Sign In'),
+              Tab(text: 'Sign Up'),
             ],
           ),
-          bottom: const PreferredSize(
-            preferredSize: Size.fromHeight(100.0),
-            child: TabBar(
-              tabs: <Widget>[
-                Tab(text: 'Sign In'),
-                Tab(text: 'Sign Up'),
-                Tab(text: 'Forgot Password?')
-              ],
-            ),
-          ),
         ),
-        body: const TabBarView(
+        body:  TabBarView(
           children: <Widget>[
-            Center(
-              child: SignIn(),
-            ),
-            Center(
-              child: Signup(),
-            ),
-            Center(
-              child: ForgotPassword(),
-            ),
+            SignIn(),
+            const Signup(),
           ],
+        ),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () {
+            showModalBottomSheet(
+              context: context,
+              builder: (BuildContext context) => const ForgotPassword(),
+            );
+          },
+          tooltip: 'Forgot Password',
+          label: const Text("Forgot Password"),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(30),
+          ),
+          icon: const Icon(Icons.lock_open),
         ),
       ),
     );

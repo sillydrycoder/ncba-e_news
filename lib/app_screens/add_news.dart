@@ -1,4 +1,6 @@
+
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -7,8 +9,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ncba_news/app.dart';
-import 'package:parchment_delta/parchment_delta.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'dart:html' as html;
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+
 
 class AddNews extends StatefulWidget {
   final String? newsId; // Add this line to accept newsId
@@ -24,6 +29,12 @@ class _AddNewsState extends State<AddNews> {
   FleatherController? _controller;
   bool _saving = false;
   final TextEditingController _titleController = TextEditingController();
+  final ImagePicker _picker = ImagePicker();
+  XFile? _thumbnail;
+  String? _thumbnailUrl;
+  String? thumbnailPath;
+
+
 
   @override
   void initState() {
@@ -35,7 +46,26 @@ class _AddNewsState extends State<AddNews> {
     if (widget.newsId != null) {
       _loadExistingNews();
     }
+
+    _titleController.addListener(() {
+      setState(() {}); // Update the UI when the title changes
+    });
   }
+
+
+
+
+  Future<void> _pickThumbnail() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _thumbnail = pickedFile; // Assign pickedFile directly to _thumbnail (which is of type XFile?)
+      });
+    }
+  }
+
+
+
 
   // Function to load existing news data
   Future<void> _loadExistingNews() async {
@@ -44,12 +74,11 @@ class _AddNewsState extends State<AddNews> {
       if (newsDoc.exists) {
         final data = newsDoc.data() as Map<String, dynamic>;
         _titleController.text = data['title'];
+        _thumbnailUrl = data['thumbnailUrl'];
 
-        final heuristics = ParchmentHeuristics(
+      final heuristics = const ParchmentHeuristics(
           formatRules: [],
-          insertRules: [
-            ForceNewlineForInsertsAroundInlineImageRule(),
-          ],
+          insertRules: [],
           deleteRules: [],
         ).merge(ParchmentHeuristics.fallback);
 
@@ -62,7 +91,9 @@ class _AddNewsState extends State<AddNews> {
       }
     } catch (e) {
       // Handle errors if loading fails
-      print("Error loading news: $e");
+      if (kDebugMode) {
+        print("Error loading news: $e");
+      }
     }
   }
 
@@ -76,19 +107,7 @@ class _AddNewsState extends State<AddNews> {
 
   Future<void> _initController() async {
     try {
-      final result = await rootBundle.loadString('welcome.json');
-      final heuristics = ParchmentHeuristics(
-        formatRules: [],
-        insertRules: [
-          ForceNewlineForInsertsAroundInlineImageRule(),
-        ],
-        deleteRules: [],
-      ).merge(ParchmentHeuristics.fallback);
-      final doc = ParchmentDocument.fromJson(
-        jsonDecode(result),
-        heuristics: heuristics,
-      );
-      _controller = FleatherController(document: doc);
+      _controller = FleatherController();
     } catch (err, st) {
       if (kDebugMode) {
         print('Cannot read welcome.json: $err\n$st');
@@ -98,26 +117,48 @@ class _AddNewsState extends State<AddNews> {
     setState(() {});
   }
 
+
+
   Future<void> _saveToFirestore(String status) async {
-    print(1);
+    String? thumbnailUrl;
+    String? thumbnailPath;
+
+    try {
+      if (_thumbnail != null) {
+        final bytes = await _thumbnail!.readAsBytes(); // Read bytes from File
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('thumbnails')
+            .child('${DateTime.now().toIso8601String()}.png');
+        await ref.putData(bytes); // Upload bytes to Firebase Storage
+        thumbnailPath = ref.fullPath;
+        thumbnailUrl = await ref.getDownloadURL();
+      }
+    } catch (e) {
+      print('Error uploading thumbnail: $e');
+    }
+
     final content = _controller!.document.toJson();
     await FirebaseFirestore.instance.collection('news').add(
       {
         'userId': FirebaseAuth.instance.currentUser!.uid,
+        'userName': FirebaseAuth.instance.currentUser!.displayName,
         'title': _titleController.text,
         'content': jsonEncode(content),
+        'thumbnailPath': thumbnailPath,
+        'thumbnailUrl': thumbnailUrl,
         'timestamp': FieldValue.serverTimestamp(),
         'status': status,
       },
-    // ignore: body_might_complete_normally_catch_error
     ).catchError((error) {
       print(error);
     });
-    print('saved to firebase');
+
+    print('Saved to Firestore');
   }
 
+
   Future<void> _showStatusDialog(String status) async {
-    print(2);
     await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -135,20 +176,27 @@ class _AddNewsState extends State<AddNews> {
     );
   }
 
-  _saveAndShowDialog(String status, String message) async {
+  Future<void> _saveAndShowDialog(String status, String message) async {
     if (widget.newsId != null) {
-      // Update existing news if newsId is present
-      await FirebaseFirestore.instance
-          .collection('news')
-          .doc(widget.newsId)
-          .update({
+      String? thumbnailUrl = _thumbnailUrl;
+      if (_thumbnail != null) {
+        final bytes = await _thumbnail!.readAsBytes(); // Convert to Uint8List
+        final ref = FirebaseStorage.instance
+            .ref()
+            .child('thumbnails')
+            .child('${DateTime.now().toIso8601String()}.png');
+        await ref.putData(bytes); // Use putData for Uint8List
+        thumbnailUrl = await ref.getDownloadURL();
+      }
+
+      await FirebaseFirestore.instance.collection('news').doc(widget.newsId).update({
         'title': _titleController.text,
         'content': jsonEncode(_controller!.document.toJson()),
-        'status': status, // Update the status if needed
-        'timestamp': FieldValue.serverTimestamp(), // Optionally update the timestamp
+        'thumbnailUrl': thumbnailUrl,
+        'status': status,
+        'timestamp': FieldValue.serverTimestamp(),
       });
     } else {
-      // Create new news if newsId is not present
       await _saveToFirestore(status);
     }
 
@@ -237,9 +285,9 @@ class _AddNewsState extends State<AddNews> {
           title: const Text('Add News'),
           actions: [
             ElevatedButton(
-              onPressed: () async {
+              onPressed: (_titleController.text.isNotEmpty && (_thumbnail != null || _thumbnailUrl != null)) ? () async {
                 await _showBottomSheetPreview();
-              },
+              } : null,
               child: const Text('Done'),
             ),
             SizedBox(width: 20.0),
@@ -249,21 +297,44 @@ class _AddNewsState extends State<AddNews> {
             ? const Center(child: CircularProgressIndicator())
             : Column(
           children: [
-             Padding(
-               padding: const EdgeInsets.all(16.0),
-               child: TextField(
-                 controller: _titleController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(
-                    borderSide: BorderSide.none,
-                    borderRadius: BorderRadius.circular(30.0),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: _titleController,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        borderRadius: BorderRadius.circular(30.0),
+                      ),
+                      filled: true,
+                      hintText: 'Title',
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                    ),
                   ),
-                  filled: true,
-                  hintText: 'Title',
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-                ),
-                           ),
-             ),
+                  const SizedBox(height: 16.0),
+                  Row(
+                    children: [
+                      ElevatedButton(
+                        onPressed: _pickThumbnail,
+                        child: const Text('Pick Thumbnail'),
+                      ),
+                      if (_thumbnail != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: Image.network(_thumbnail!.path, width: 100, height: 100, fit: BoxFit.cover),
+                        )
+                      else if (_thumbnailUrl != null)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: Image.network(_thumbnailUrl!, width: 100, height: 100, fit: BoxFit.cover),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
             FleatherToolbar.basic(controller: _controller!),
             Divider(height: 1, thickness: 1, color: Colors.grey.shade200),
             Expanded(
@@ -322,45 +393,5 @@ class _AddNewsState extends State<AddNews> {
     if (canLaunch) {
       await launchUrl(uri);
     }
-  }
-}
-
-/// This is an example insert rule that will insert a new line before and
-/// after inline image embed.
-class ForceNewlineForInsertsAroundInlineImageRule extends InsertRule {
-  @override
-  Delta? apply(Delta document, int index, Object data) {
-    if (data is! String) return null;
-
-    final iter = DeltaIterator(document);
-    final previous = iter.skip(index);
-    final target = iter.next();
-    final cursorBeforeInlineEmbed = _isInlineImage(target.data);
-    final cursorAfterInlineEmbed =
-        previous != null && _isInlineImage(previous.data);
-
-    if (cursorBeforeInlineEmbed || cursorAfterInlineEmbed) {
-      final delta = Delta()..retain(index);
-      if (cursorAfterInlineEmbed && !data.startsWith('\n')) {
-        delta.insert('\n');
-      }
-      delta.insert(data);
-      if (cursorBeforeInlineEmbed && !data.endsWith('\n')) {
-        delta.insert('\n');
-      }
-      return delta;
-    }
-    return null;
-  }
-
-  bool _isInlineImage(Object data) {
-    if (data is EmbeddableObject) {
-      return data.type == 'image' && data.inline;
-    }
-    if (data is Map) {
-      return data[EmbeddableObject.kTypeKey] == 'image' &&
-          data[EmbeddableObject.kInlineKey];
-    }
-    return false;
   }
 }

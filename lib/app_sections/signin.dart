@@ -1,27 +1,21 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:ncba_news/app_sections/forgot_password.dart';
 
 class SignIn extends StatefulWidget {
-  const SignIn({super.key});
+  SignIn({Key? key}) : super(key: key);
 
   @override
   State<SignIn> createState() => _SignInState();
 }
 
 class _SignInState extends State<SignIn> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _signIn() async {
-    if (formKey.currentState!.validate()) {
+  void _signIn() async {
+    if (_formKey.currentState!.validate()) {
       try {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: _emailController.text,
@@ -47,17 +41,24 @@ class _SignInState extends State<SignIn> {
     }
   }
 
+  void _showForgotPasswordSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) => ForgotPassword(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold( // Added a Scaffold
-      body: Center(
-        child: Form(
-          key: formKey,
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Form(
+          key: _formKey,
           child: SizedBox(
             width: 320,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 const SizedBox(height: 20.0),
                 const Text(
@@ -70,7 +71,7 @@ class _SignInState extends State<SignIn> {
                 const SizedBox(height: 20.0),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TextFormField( // Changed to TextFormField for validation
+                  child: TextFormField(
                     controller: _emailController,
                     decoration: InputDecoration(
                       hintText: 'Email',
@@ -80,7 +81,9 @@ class _SignInState extends State<SignIn> {
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          vertical: 0.0, horizontal: 20.0),
+                        vertical: 0.0,
+                        horizontal: 20.0,
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -96,7 +99,7 @@ class _SignInState extends State<SignIn> {
                 const SizedBox(height: 20.0),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TextFormField( // Changed to TextFormField for validation
+                  child: TextFormField(
                     controller: _passwordController,
                     obscureText: true,
                     decoration: InputDecoration(
@@ -107,7 +110,9 @@ class _SignInState extends State<SignIn> {
                         borderSide: BorderSide.none,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
-                          vertical: 0.0, horizontal: 20.0),
+                        vertical: 0.0,
+                        horizontal: 20.0,
+                      ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -123,11 +128,15 @@ class _SignInState extends State<SignIn> {
                   child: const Text('Sign In'),
                 ),
                 const SizedBox(height: 20.0),
+                TextButton(
+                  onPressed: _showForgotPasswordSheet,
+                  child: const Text('Forgot Password?'),
+                ),
               ],
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 }
