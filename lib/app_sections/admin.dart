@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 
@@ -46,7 +48,8 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
 
   Future<void> _getAllNews() async {
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('news')
+      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('news')
           .where('status', isEqualTo: 'published')
           .get();
       setState(() {
@@ -67,6 +70,21 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
   String convertToPlainText(String json) {
     final doc = ParchmentDocument.fromJson(jsonDecode(json));
     return truncateString(doc.toPlainText(), 200);
+  }
+
+  Future<Uint8List> getImageData(String path) async {
+    try {
+      print("Path: $path");
+      Uint8List? data = await FirebaseStorage.instance.ref(path).getData();
+      if (data != null) {
+        return data;
+      } else {
+        return Uint8List(0); // Return an empty Uint8List if data is null
+      }
+    } catch (e) {
+      print("Error getting image data: $e");
+      return Uint8List(0); // Return an empty Uint8List in case of an error
+    }
   }
 
   @override
@@ -98,17 +116,36 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                     itemCount: pendingNewsList.length,
                     itemBuilder: (context, index) {
                       String title = pendingNewsList[index]['title'] ?? 'Untitled';
-                      String status = pendingNewsList[index]['status'].toString().toLowerCase();
                       String content = pendingNewsList[index]['content'] ?? '';
+                      String thumbnailPath = pendingNewsList[index]['thumbnailPath'] ?? '';
                       return Container(
                         margin: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.yellow[100]
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.yellow[100]
                         ),
                         child: Column(
                           children: [
                             ListTile(
+                              leading: FutureBuilder<Uint8List>(
+                                future: getImageData(thumbnailPath),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return const CircularProgressIndicator(
+                                      color: Colors.grey,
+                                    );
+                                  }
+                                  if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
+                                    print(snapshot.error);
+                                    print(snapshot.data);
+                                    return const Icon(Icons.error);
+                                  }
+                                  return Image.memory(
+                                    snapshot.data!,
+                                    width: 100,
+                                  );
+                                },
+                              ),
                               title: Text(title),
                               subtitle: Text(convertToPlainText(content)),
                             ),
@@ -132,38 +169,29 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                                       icon: const Icon(Icons.edit)),
                                   IconButton(
                                       onPressed: () {
-                                        // confirm delete
                                         showDialog(
                                           context: context,
                                           builder: (context) {
                                             return AlertDialog(
-                                              title:
-                                              const Text('Delete News'),
-                                              content: const Text(
-                                                  'Are you sure you want to delete this news?'),
+                                              title: const Text('Delete News'),
+                                              content: const Text('Are you sure you want to delete this news?'),
                                               actions: [
                                                 TextButton(
                                                   onPressed: () {
-                                                    Navigator.of(context)
-                                                        .pop();
+                                                    Navigator.of(context).pop();
                                                   },
                                                   child: const Text('Cancel'),
                                                 ),
                                                 TextButton(
                                                   onPressed: () {
-                                                    Navigator.of(context)
-                                                        .pop();
+                                                    Navigator.of(context).pop();
                                                     FirebaseFirestore.instance
                                                         .collection('news')
-                                                        .doc(pendingNewsList[index]
-                                                        .id)
+                                                        .doc(pendingNewsList[index].id)
                                                         .delete()
-                                                        .then((value) =>
-                                                        setState(() {
-                                                          pendingNewsList
-                                                              .removeAt(
-                                                              index);
-                                                        }));
+                                                        .then((value) => setState(() {
+                                                      pendingNewsList.removeAt(index);
+                                                    }));
                                                   },
                                                   child: const Text('Delete'),
                                                 ),
@@ -178,11 +206,11 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                                         .doc(pendingNewsList[index].id)
                                         .update({'status': 'published'})
                                         .then((value) {
-                                          setState(() {
-                                            pendingNewsList.removeAt(index);
-                                          });
-                                          _getAllNews();
-                                        });
+                                      setState(() {
+                                        pendingNewsList.removeAt(index);
+                                      });
+                                      _getAllNews();
+                                    });
                                   }, icon: const Icon(Icons.done_all)),
                                 ],
                               ),
@@ -207,15 +235,35 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                       String title = allNewsList[index]['title'] ?? 'Untitled';
                       String status = allNewsList[index]['status'].toString().toLowerCase();
                       String content = allNewsList[index]['content'] ?? '';
+                      String thumbnailPath = allNewsList[index]['thumbnailPath'] ?? '';
                       return Container(
                         margin: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: Colors.green[100]
+                            borderRadius: BorderRadius.circular(8),
+                            color: Colors.green[100]
                         ),
                         child: Column(
                           children: [
                             ListTile(
+                              leading: FutureBuilder<Uint8List>(
+                                future: getImageData(thumbnailPath),
+                                builder: (context, snapshot) {
+                                  if (snapshot.connectionState == ConnectionState.waiting) {
+                                    return const CircularProgressIndicator(
+                                      color: Colors.grey,
+                                    );
+                                  }
+                                  if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
+                                    print(snapshot.error);
+                                    print(snapshot.data);
+                                    return const Icon(Icons.error);
+                                  }
+                                  return Image.memory(
+                                    snapshot.data!,
+                                    width: 100,
+                                  );
+                                },
+                              ),
                               title: Text(title),
                               subtitle: Text(convertToPlainText(content)),
                             ),
@@ -239,38 +287,29 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                                       icon: const Icon(Icons.edit)),
                                   IconButton(
                                       onPressed: () {
-                                        // confirm delete
                                         showDialog(
                                           context: context,
                                           builder: (context) {
                                             return AlertDialog(
-                                              title:
-                                              const Text('Delete News'),
-                                              content: const Text(
-                                                  'Are you sure you want to delete this news?'),
+                                              title: const Text('Delete News'),
+                                              content: const Text('Are you sure you want to delete this news?'),
                                               actions: [
                                                 TextButton(
                                                   onPressed: () {
-                                                    Navigator.of(context)
-                                                        .pop();
+                                                    Navigator.of(context).pop();
                                                   },
                                                   child: const Text('Cancel'),
                                                 ),
                                                 TextButton(
                                                   onPressed: () {
-                                                    Navigator.of(context)
-                                                        .pop();
+                                                    Navigator.of(context).pop();
                                                     FirebaseFirestore.instance
                                                         .collection('news')
-                                                        .doc(allNewsList[index]
-                                                        .id)
+                                                        .doc(allNewsList[index].id)
                                                         .delete()
-                                                        .then((value) =>
-                                                        setState(() {
-                                                          allNewsList
-                                                              .removeAt(
-                                                              index);
-                                                        }));
+                                                        .then((value) => setState(() {
+                                                      allNewsList.removeAt(index);
+                                                    }));
                                                   },
                                                   child: const Text('Delete'),
                                                 ),
@@ -285,11 +324,11 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                                         .doc(allNewsList[index].id)
                                         .update({'status': 'pending'})
                                         .then((value) {
-                                          setState(() {
-                                            allNewsList.removeAt(index);
-                                          });
-                                          _getPendingNews();
-                                        });
+                                      setState(() {
+                                        allNewsList.removeAt(index);
+                                      });
+                                      _getPendingNews();
+                                    });
                                   }, icon: const Icon(Icons.remove_done)),
                                 ],
                               ),

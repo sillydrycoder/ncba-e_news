@@ -1,9 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';
-import 'package:ncba_news/app_sections/forgot_password.dart';
+import 'package:flutter/material.dart';import 'package:ncba_news/app_sections/forgot_password.dart';
 
 class SignIn extends StatefulWidget {
-  SignIn({Key? key}) : super(key: key);
+  const SignIn({super.key});
 
   @override
   State<SignIn> createState() => _SignInState();
@@ -14,29 +13,29 @@ class _SignInState extends State<SignIn> {
   final TextEditingController _passwordController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  void _signIn() async {
+  _signInPressed() {
     if (_formKey.currentState!.validate()) {
-      try {
-        await FirebaseAuth.instance.signInWithEmailAndPassword(
-          email: _emailController.text,
-          password: _passwordController.text,
-        );
-        print("Sign-in successful"); // Replace with your desired action
-      } on FirebaseAuthException catch (e) {
-        if (e.code == 'user-not-found') {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("No user found for that email."),
-          ));
-        } else if (e.code == 'wrong-password') {
-          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text("Wrong password provided for that user."),
-          ));
-        } else {
-          // Generic error handling
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text("Error: ${e.message}"),
-          ));
-        }
+      signInUser(_emailController.text, _passwordController.text).then((value) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(value),
+        ));
+      });
+    }
+  }
+
+  signInUser(String email, String password) async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      ).then((value) {
+        return 'Sign In Successful.';
+      });
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        return 'User not found.';
+      } else if (e.code == 'wrong-password') {
+        return 'Incorrect password.';
       }
     }
   }
@@ -44,99 +43,113 @@ class _SignInState extends State<SignIn> {
   void _showForgotPasswordSheet() {
     showModalBottomSheet(
       context: context,
-      builder: (BuildContext context) => ForgotPassword(),
+      builder: (BuildContext context) => const ForgotPassword(),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        Form(
-          key: _formKey,
-          child: SizedBox(
-            width: 320,
-            child: Column(
-              children: <Widget>[
-                const SizedBox(height: 20.0),
-                const Text(
-                  'Sign In',
-                  style: TextStyle(
-                    fontSize: 25.0,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20.0),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TextFormField(
-                    controller: _emailController,
-                    decoration: InputDecoration(
-                      hintText: 'Email',
-                      filled: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 0.0,
-                        horizontal: 20.0,
-                      ),
+    return Scaffold(
+      body: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    margin: const EdgeInsets.all(20.0),
+                    child: Image.asset(
+                      'assets/images/ncba_logo.png',
+                      height: 40,
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
-                      }
-                      if (!value.contains('@')) {
-                        return 'Please enter a valid email';
-                      }
-                      return null;
-                    },
                   ),
-                ),
-                const SizedBox(height: 20.0),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TextFormField(
-                    controller: _passwordController,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: 'Password',
-                      filled: true,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        vertical: 0.0,
-                        horizontal: 20.0,
-                      ),
+                  const Text(
+                    'NCBA&E News',
+                    style: TextStyle(
+                      fontSize: 35.0,
+                      fontWeight: FontWeight.bold,
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
-                      }
-                      return null;
-                    },
+                  )
+                ],
+              ),
+              Container(
+                width: 320,
+                padding: const EdgeInsets.all(20.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: <Widget>[
+                      const SizedBox(height: 20.0),
+                      TextFormField(
+                        autofillHints: const [AutofillHints.email],
+                        keyboardType: TextInputType.emailAddress,
+                        controller: _emailController,
+                        decoration: const InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your email';
+                          }
+                          if (!value.contains('@')) {
+                            return 'Please enter a valid email';
+                          }
+                          return null;
+                        },
+                      ),
+                      Row(
+                        children: [
+                          Expanded(child: Container()),
+                          TextButton(onPressed: () {}, child: const Text('Forgot Password?')),
+                        ],
+                      ),
+                      TextFormField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(10)),
+                          ),
+                          suffixIcon: Icon(Icons.visibility_off),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please enter your password';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20.0),
+                      ElevatedButton(
+                        onPressed: _signInPressed,
+                        style: ElevatedButton.styleFrom(
+                          minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: const Text('Sign In'),
+                      ),
+                      const SizedBox(height: 20.0),
+                      TextButton(
+                        onPressed: _showForgotPasswordSheet,
+                        child: const Text("Don't have an account?"),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 20.0),
-                ElevatedButton(
-                  onPressed: _signIn,
-                  child: const Text('Sign In'),
-                ),
-                const SizedBox(height: 20.0),
-                TextButton(
-                  onPressed: _showForgotPasswordSheet,
-                  child: const Text('Forgot Password?'),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

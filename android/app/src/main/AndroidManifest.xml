@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="ncba_news"
+        android:label="NCBA&amp;E News"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

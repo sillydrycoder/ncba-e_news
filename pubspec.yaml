@@ -48,6 +48,9 @@ dependencies:
   pull_to_refresh: ^2.0.0
   pull_to_refresh_flutter3: ^2.0.2
   file_picker: ^8.0.6
+  internet_connection_checker_plus: ^2.5.0
+  firebase_app_check: ^0.3.0+2
+  json_theme: ^6.5.0+1
 
 dev_dependencies:
   flutter_test:
@@ -71,7 +74,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/
+    - assets/theme.json
+    - assets/welcome.json
+    - assets/images/ncba_logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

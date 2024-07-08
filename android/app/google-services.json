@@ -12,7 +12,12 @@
           "package_name": "com.ncba.news"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "221631606516-75j020a6990ko57ht7rfl0q1k5j1rjjr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA5bqoJuTdESj0pqBRPq2LXt-m21UeNF2U"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "221631606516-75j020a6990ko57ht7rfl0q1k5j1rjjr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

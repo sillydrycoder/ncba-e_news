@@ -1,7 +1,12 @@
+import 'dart:convert';
+
+import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:ncba_news/app_screens/authenticate.dart';
+import 'package:flutter/services.dart';
+import 'package:json_theme/json_theme.dart';
+import 'package:ncba_news/app_sections/signin.dart';
 
 import 'app.dart';
 import 'app_screens/add_news.dart';
@@ -9,11 +14,15 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  runApp(const MyApp());
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // configure app check
+  await FirebaseAppCheck.instance.activate(androidProvider: AndroidProvider.playIntegrity, webProvider: ReCaptchaEnterpriseProvider("6LeXYQgqAAAAAHdCNX4kcl7i2Az9oowOLK7WPvV-"));
+  final themeStr = await rootBundle.loadString('assets/theme.json');
+  final themeJSON = jsonDecode(themeStr);
+  final theme = ThemeDecoder.decodeThemeData(themeJSON);
+  runApp(MyApp(theme: theme));
 }
+
 
 // In your main.dart or a separate routes file
 Map<String, WidgetBuilder> routes = {
@@ -25,7 +34,7 @@ Map<String, WidgetBuilder> routes = {
 };
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  const MyApp({super.key, required theme} );
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -33,6 +42,7 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   User? _user;
+  ThemeData? theme;
 
   @override
   void initState() {
@@ -51,11 +61,10 @@ class _MyAppState extends State<MyApp> {
       routes: routes,
       debugShowCheckedModeBanner: false,
       title: 'NCBA News',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-        useMaterial3: true,
-      ),
-      home: _user == null ? const Authenticate() : const MyHomePage(),
+      theme: theme,
+      home: _user == null ? const SignIn() : const MyHomePage(),
+      themeMode: ThemeMode.system,
+
     );
   }
 }

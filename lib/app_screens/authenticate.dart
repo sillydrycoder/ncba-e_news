@@ -37,20 +37,6 @@ class _AuthenticateState extends State<Authenticate> {
             const Signup(),
           ],
         ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            showModalBottomSheet(
-              context: context,
-              builder: (BuildContext context) => const ForgotPassword(),
-            );
-          },
-          tooltip: 'Forgot Password',
-          label: const Text("Forgot Password"),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(30),
-          ),
-          icon: const Icon(Icons.lock_open),
-        ),
       ),
     );
   }
