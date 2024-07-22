@@ -1,10 +1,13 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/widgets.dart';
-import 'package:ncba_news/app_sections/feed.dart';
-import 'app_screens/add_news.dart';
-import 'app_screens/profile.dart';
+import 'package:ncba_news/app_screens/publishing_portal.dart';
+import 'package:ncba_news/app_sections/categories.dart';
+import 'package:ncba_news/app_screens/saved.dart';
+import 'app_screens/news_editor.dart';
+import 'app_screens/signin.dart';
+import 'app_sections/feed.dart';
+import 'app_sections/profile.dart';
 import 'app_sections/admin.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -23,15 +26,16 @@ class _MyHomePageState extends State<MyHomePage>
   bool _searchBarToggled = false;
   int currentPageIndex = 0;
   bool _loading = true;
+  String _searchQuery = '';
   late List<Widget> _pages;
   late AnimationController _iconAnimationController;
-  int screenIndex = 0;
-  late bool showNavigationDrawer;
+  final TextEditingController _searchController = TextEditingController();
 
   void handleScreenChanged(int selectedScreen) {
     setState(() {
-      screenIndex = selectedScreen;
+      currentPageIndex = selectedScreen;
     });
+    Navigator.of(context).pop(); // Close the drawer
   }
 
   void openDrawer() {
@@ -60,14 +64,15 @@ class _MyHomePageState extends State<MyHomePage>
       if (user != null) {
         // Check if the user has admin custom claim
         final idTokenResult = await user.getIdTokenResult();
-        print(idTokenResult);
         setState(() {
           _isAdmin = idTokenResult.claims?['admin'] ?? false;
           _pages = _buildPages();
         });
       }
     } catch (e) {
-      print("Error checking admin status: $e");
+      if (kDebugMode) {
+        print("Error checking admin status: $e");
+      }
     } finally {
       setState(() {
         _loading =
@@ -76,11 +81,54 @@ class _MyHomePageState extends State<MyHomePage>
     }
   }
 
+  _getPageLabel(int index) {
+    switch (index) {
+      case 0:
+        return const Text(
+          "Home",
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        );
+      case 1:
+        return const Text(
+          "Saved",
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        );
+      case 2:
+        return const Text(
+          "Categories",
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        );
+      case 3:
+        return const Text(
+          "Profile",
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        );
+      case 4:
+        return const Text(
+          "Publishing Portal",
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        );
+      case 5:
+        return const Text(
+          "Admin",
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        );
+      default:
+        return const Text(
+          "Unknown",
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
+        );
+    }
+  }
+
   List<Widget> _buildPages() {
     List<Widget> pages = [
-      const Feed(),
-      const Text('Saved'),
-      const Text('Categories'),
+      Feed(searchQuery: _searchQuery),
+      const Saved(),
+      const Categories(),
+      const Profile(),
+      const PublishingPortal(),
+      const AdminTabSection(),
     ];
 
     if (_isAdmin) {
@@ -91,7 +139,20 @@ class _MyHomePageState extends State<MyHomePage>
   }
 
   void _signOut() async {
-    await _auth.signOut();
+    try {
+      await FirebaseAuth.instance.signOut().then((value) => {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => const SignIn()),
+              (route) => false,
+            )
+          });
+    } catch (e) {
+      // Handle sign-out errors if necessary
+      if (kDebugMode) {
+        print('Error signing out: $e');
+      }
+    }
   }
 
   void _toggleSearchBar() {
@@ -113,12 +174,11 @@ class _MyHomePageState extends State<MyHomePage>
         elevation: 5,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.only(
-            bottomLeft: Radius.circular(20),
-            bottomRight: Radius.circular(20),
+            bottomLeft: Radius.circular(30),
+            bottomRight: Radius.circular(30),
           ),
         ),
         centerTitle: true,
-
         leading: DrawerButton(
           onPressed: openDrawer,
         ),
@@ -138,11 +198,19 @@ class _MyHomePageState extends State<MyHomePage>
           child: Container(
             padding: const EdgeInsets.all(10),
             child: _searchBarToggled
-                ? TextField(
+                ? TextFormField(
+                    controller: _searchController,
                     decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search),
-                      prefix: const Text("Search: "),
                       suffixIcon: IconButton(
+                        icon: const Icon(Icons.search),
+                        onPressed: () {
+                          setState(() {
+                            _searchQuery = _searchController.text;
+                          });
+                        },
+                      ),
+                      prefix: const Text("Search: "),
+                      prefixIcon: IconButton(
                         icon: const Icon(Icons.cancel_outlined),
                         onPressed: () {
                           setState(() {
@@ -151,29 +219,58 @@ class _MyHomePageState extends State<MyHomePage>
                         },
                       ),
                       filled: true,
+                      contentPadding: const EdgeInsets.all(9),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(30),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.all(9),
                     ),
                   )
-                : Row(
-                    children: [
-                      IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.filter_alt_outlined)),
-                      Expanded(child: Container()),
-                      IconButton(
-                          onPressed: () {},
-                          icon: const Icon(Icons.chat_outlined)),
-                      IconButton(
-                          onPressed: () {},
-                          icon: const Badge(
-                            label: Text("10"),
-                            child: Icon(Icons.notifications_outlined),
-                          )),
-                    ],
+                : Container(
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey[400]!),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 30),
+                    child: PopupMenuButton(
+                      itemBuilder: (context) {
+                        return [
+                          const PopupMenuItem(
+                            value: 0,
+                            child: Text("Home"),
+                          ),
+                          const PopupMenuItem(
+                            value: 1,
+                            child: Text("Saved"),
+                          ),
+                          const PopupMenuItem(
+                            value: 2,
+                            child: Text("Categories"),
+                          ),
+                          const PopupMenuItem(
+                            value: 3,
+                            child: Text("Profile"),
+                          ),
+                          const PopupMenuItem(
+                            value: 4,
+                            child: Text("Publishing Portal"),
+                          ),
+                          if (_isAdmin)
+                            const PopupMenuItem(
+                              value: 5,
+                              child: Text("Admin"),
+                            ),
+                        ];
+                      },
+                      onSelected: (int value) {
+                        setState(() {
+                          currentPageIndex = value;
+                        });
+                      },
+                      child: _getPageLabel(currentPageIndex),
+                    ),
                   ),
           ),
         ),
@@ -192,74 +289,67 @@ class _MyHomePageState extends State<MyHomePage>
             ? const CircularProgressIndicator()
             : _pages.elementAt(currentPageIndex),
       ),
-      drawer: Drawer(
-        width: 260,
-        child: ListView(
-          padding: const EdgeInsets.all(10),
-          children: [
-            UserAccountsDrawerHeader(
-              decoration: BoxDecoration(
-                borderRadius: const BorderRadius.only(topRight: Radius.circular(20)),
-                color: Theme.of(context).primaryColor,
-              ),
-              onDetailsPressed: () {
-
-              },
-                accountName: const Text("Muhammad Ali"),
-                accountEmail: const Text("muhammad_ali@workmail.com")
+      drawer: NavigationDrawer(
+        onDestinationSelected: (int index) {
+          handleScreenChanged(index);
+        },
+        selectedIndex: currentPageIndex,
+        elevation: 1,
+        tilePadding: const EdgeInsets.all(10),
+        children: [
+          const NavigationDrawerDestination(
+            icon: Icon(Icons.home_outlined),
+            label: Text("Home"),
+          ),
+          const NavigationDrawerDestination(
+            icon: Icon(Icons.bookmark_outline),
+            label: Text("Saved"),
+          ),
+          const NavigationDrawerDestination(
+            icon: Icon(Icons.category_outlined),
+            label: Text("Categories"),
+          ),
+          const NavigationDrawerDestination(
+            icon: Icon(Icons.person_outline),
+            label: Text("Profile"),
+          ),
+          const NavigationDrawerDestination(
+              icon: Icon(Icons.publish_outlined),
+              label: Text("Publishing Portal")),
+          if (_isAdmin)
+            const NavigationDrawerDestination(
+              icon: Icon(Icons.admin_panel_settings_outlined),
+              label: Text("Admin"),
             ),
-            ListTile(
-              selectedTileColor: Colors.grey[300],
-              shape: const RoundedRectangleBorder(
-              ),
-              title: const Text("Home"),
-              leading: const Icon(Icons.home),
-              selected: screenIndex == 0,
-              onTap: () {
-                handleScreenChanged(0);
-                Navigator.pop(context);
-              },
-            ),
-            const SizedBox(height: 5),
-            ListTile(
-              selectedTileColor: Colors.grey[300],
-              shape: const RoundedRectangleBorder(),
-              title: const Text("Publishing Portal"),
-              leading: const Icon(Icons.newspaper),
-              selected: false,
-              onTap: () {
-                handleScreenChanged(0);
-                Navigator.pop(context);
-              },
-            ),
-            const SizedBox(height: 5),
-            ListTile(
-              selectedTileColor: Colors.grey[300],
-              shape: const RoundedRectangleBorder(
-              ),
-              title: const Text("Saved"),
-              leading: const Icon(Icons.bookmark_border),
-              selected: false,
-              onTap: () {
-                handleScreenChanged(0);
-                Navigator.pop(context);
-              },
-            ),
-            const SizedBox(height: 5),
-            ListTile(
-              selectedTileColor: Colors.grey[300],
-              shape: const RoundedRectangleBorder(
-              ),
-              title: const Text("Sign Out"),
-              leading: const Icon(Icons.logout_outlined),
-              selected: false,
-              onTap: () {
-                _signOut();
-              },
-            ),
-          ],
-        ),
+          const Divider(
+            indent: 10,
+            endIndent: 10,
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () {
+                  _signOut();
+                },
+                label: const Text("Sign Out"),
+                icon: const Icon(Icons.logout_outlined),
+              )
+            ],
+          )
+        ],
       ),
+      floatingActionButton: currentPageIndex == 4
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const NewsEditor()));
+              },
+              child: const Icon(Icons.add),
+            )
+          : null,
     );
   }
 }

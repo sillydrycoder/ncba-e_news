@@ -1,40 +1,40 @@
+import 'dart:async';
 import 'dart:convert';
-
-import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:json_theme/json_theme.dart';
-import 'package:ncba_news/app_sections/signin.dart';
+import 'package:internet_connection_checker_plus/internet_connection_checker_plus.dart';
+import 'package:ncba_news/app.dart';
+import 'package:ncba_news/app_screens/signin.dart';
+import 'package:ncba_news/app_screens/verification.dart';
+import 'package:ncba_news/app_screens/no_connection.dart';
 
-import 'app.dart';
-import 'app_screens/add_news.dart';
 import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // configure app check
-  await FirebaseAppCheck.instance.activate(androidProvider: AndroidProvider.playIntegrity, webProvider: ReCaptchaEnterpriseProvider("6LeXYQgqAAAAAHdCNX4kcl7i2Az9oowOLK7WPvV-"));
-  final themeStr = await rootBundle.loadString('assets/theme.json');
-  final themeJSON = jsonDecode(themeStr);
-  final theme = ThemeDecoder.decodeThemeData(themeJSON);
+
+  ThemeData? theme;
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    final themeStr = await rootBundle.loadString('assets/theme.json');
+    final themeJSON = jsonDecode(themeStr);
+    theme = ThemeDecoder.decodeThemeData(themeJSON);
+  } catch (e) {
+    print('Error initializing Firebase or loading theme: $e');
+    // Use default theme or handle error as needed
+    theme = ThemeData.light(); // Fallback theme
+  }
+
   runApp(MyApp(theme: theme));
 }
 
-
-// In your main.dart or a separate routes file
-Map<String, WidgetBuilder> routes = {
-  '/add_news': (context) => const AddNews(),
-  '/edit_news': (context) {
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, String>?;
-    return AddNews(newsId: args?['newsId']);
-  },
-};
-
 class MyApp extends StatefulWidget {
-  const MyApp({super.key, required theme} );
+  const MyApp({super.key, required this.theme});
+
+  final ThemeData? theme;
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -42,29 +42,79 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   User? _user;
-  ThemeData? theme;
+  bool _connected = true;
+  bool _checkingConnection = true;
+
+  late StreamSubscription<InternetStatus> connectionListener;
+  Timer? _connectionTimer;
+  late StreamSubscription<User?> authStateSubscription;
 
   @override
   void initState() {
     super.initState();
-    // Listen for authentication changes
+
     FirebaseAuth.instance.authStateChanges().listen((User? user) {
       setState(() {
-        _user = user; // Update the user state variable
+        _user = user;
+      });
+    });
+
+    connectionListener = InternetConnection().onStatusChange.listen((InternetStatus status) {
+      setState(() {
+        _connected = (status == InternetStatus.connected);
+        if (_connected) {
+          _checkingConnection = false;
+        }
+      });
+    });
+
+    _connectionTimer = Timer(const Duration(seconds: 30), () {
+      setState(() {
+        _checkingConnection = false;
       });
     });
   }
 
+
+  @override
+  void dispose() {
+    connectionListener.cancel();
+    _connectionTimer?.cancel();
+    authStateSubscription.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_checkingConnection) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    Widget homeWidget;
+
+    if (!_connected) {
+      homeWidget = const NoConnection();
+    } else if (_user == null) {
+      homeWidget = const SignIn();
+    } else if (!_user!.emailVerified) {
+      homeWidget = const Verification();
+    } else {
+      homeWidget = const MyHomePage(); // Make sure to create this screen
+    }
+
     return MaterialApp(
-      routes: routes,
       debugShowCheckedModeBanner: false,
       title: 'NCBA News',
-      theme: theme,
-      home: _user == null ? const SignIn() : const MyHomePage(),
-      themeMode: ThemeMode.system,
-
+      theme: widget.theme,
+      home: homeWidget,
+      themeMode: ThemeMode.light,
+      routes: {
+        '/signin': (context) => const SignIn(),
+        '/home': (context) => const MyHomePage(),
+        // Add other routes here
+      },
     );
   }
 }

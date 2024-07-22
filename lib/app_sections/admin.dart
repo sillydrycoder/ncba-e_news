@@ -6,6 +6,8 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 
+import '../app_screens/news_editor.dart';
+
 class AdminTabSection extends StatefulWidget {
   const AdminTabSection({super.key});
 
@@ -117,7 +119,7 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                     itemBuilder: (context, index) {
                       String title = pendingNewsList[index]['title'] ?? 'Untitled';
                       String content = pendingNewsList[index]['content'] ?? '';
-                      String thumbnailPath = pendingNewsList[index]['thumbnailPath'] ?? '';
+                      String thumbnailUrl = pendingNewsList[index]['thumbnailUrl'] ?? '';
                       return Container(
                         margin: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -127,25 +129,9 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                         child: Column(
                           children: [
                             ListTile(
-                              leading: FutureBuilder<Uint8List>(
-                                future: getImageData(thumbnailPath),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
-                                    return const CircularProgressIndicator(
-                                      color: Colors.grey,
-                                    );
-                                  }
-                                  if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
-                                    print(snapshot.error);
-                                    print(snapshot.data);
-                                    return const Icon(Icons.error);
-                                  }
-                                  return Image.memory(
-                                    snapshot.data!,
-                                    width: 100,
-                                  );
-                                },
-                              ),
+                              leading: thumbnailUrl.isNotEmpty
+                                  ? Image.network(thumbnailUrl)
+                                  : const Icon(Icons.broken_image),
                               title: Text(title),
                               subtitle: Text(convertToPlainText(content)),
                             ),
@@ -160,11 +146,12 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                                 children: [
                                   IconButton(
                                       onPressed: () {
-                                        Navigator.pushNamed(
+                                        Navigator.push(
                                             context,
-                                            '/edit_news',
-                                            arguments: {'newsId': pendingNewsList[index].id}
-                                        );
+                                            MaterialPageRoute(
+                                                builder: (context) =>
+                                                    NewsEditor(
+                                                        newsId: pendingNewsList[index].id)));
                                       },
                                       icon: const Icon(Icons.edit)),
                                   IconButton(
@@ -235,7 +222,7 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                       String title = allNewsList[index]['title'] ?? 'Untitled';
                       String status = allNewsList[index]['status'].toString().toLowerCase();
                       String content = allNewsList[index]['content'] ?? '';
-                      String thumbnailPath = allNewsList[index]['thumbnailPath'] ?? '';
+                      String thumbnailUrl = allNewsList[index]['thumbnailUrl'] ?? '';
                       return Container(
                         margin: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -245,25 +232,9 @@ class _AdminTabSectionState extends State<AdminTabSection> with SingleTickerProv
                         child: Column(
                           children: [
                             ListTile(
-                              leading: FutureBuilder<Uint8List>(
-                                future: getImageData(thumbnailPath),
-                                builder: (context, snapshot) {
-                                  if (snapshot.connectionState == ConnectionState.waiting) {
-                                    return const CircularProgressIndicator(
-                                      color: Colors.grey,
-                                    );
-                                  }
-                                  if (snapshot.hasError || snapshot.data == null || snapshot.data!.isEmpty) {
-                                    print(snapshot.error);
-                                    print(snapshot.data);
-                                    return const Icon(Icons.error);
-                                  }
-                                  return Image.memory(
-                                    snapshot.data!,
-                                    width: 100,
-                                  );
-                                },
-                              ),
+                              leading: thumbnailUrl.isNotEmpty
+                                  ? Image.network(thumbnailUrl)
+                                  : const Icon(Icons.broken_image),
                               title: Text(title),
                               subtitle: Text(convertToPlainText(content)),
                             ),

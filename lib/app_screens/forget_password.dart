@@ -1,50 +1,42 @@
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/material.dart';import 'package:ncba_news/app_sections/forgot_password.dart';
+import 'package:flutter/material.dart';
 
-class SignIn extends StatefulWidget {
-  const SignIn({super.key});
+class ForgotPassword extends StatefulWidget {
+  const ForgotPassword({super.key});
 
   @override
-  State<SignIn> createState() => _SignInState();
+  State<ForgotPassword> createState() => _ForgotPasswordState();
 }
 
-class _SignInState extends State<SignIn> {
+class _ForgotPasswordState extends State<ForgotPassword> {
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
-  _signInPressed() {
-    if (_formKey.currentState!.validate()) {
-      signInUser(_emailController.text, _passwordController.text).then((value) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(value),
-        ));
-      });
-    }
+  @override
+  void dispose() {
+    _emailController.dispose();
+    super.dispose();
   }
 
-  signInUser(String email, String password) async {
-    try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      ).then((value) {
-        return 'Sign In Successful.';
-      });
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found') {
-        return 'User not found.';
-      } else if (e.code == 'wrong-password') {
-        return 'Incorrect password.';
+  Future<void> _sendPasswordResetEmail() async {
+    if (formKey.currentState!.validate()) {
+      try {
+        await FirebaseAuth.instance.sendPasswordResetEmail(
+          email: _emailController.text,
+        );
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Password reset email sent.")),
+        );
+      } on FirebaseAuthException catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: ${e.message}")),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Error: $e")),
+        );
       }
     }
-  }
-
-  void _showForgotPasswordSheet() {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) => const ForgotPassword(),
-    );
   }
 
   @override
@@ -77,11 +69,18 @@ class _SignInState extends State<SignIn> {
                 width: 320,
                 padding: const EdgeInsets.all(20.0),
                 child: Form(
-                  key: _formKey,
+                  key: formKey,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: <Widget>[
+                      const Text(
+                        'Forgot Password',
+                        style: TextStyle(
+                          fontSize: 25.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       const SizedBox(height: 20.0),
                       TextFormField(
                         autofillHints: const [AutofillHints.email],
@@ -103,44 +102,23 @@ class _SignInState extends State<SignIn> {
                           return null;
                         },
                       ),
-                      Row(
-                        children: [
-                          Expanded(child: Container()),
-                          TextButton(onPressed: () {}, child: const Text('Forgot Password?')),
-                        ],
-                      ),
-                      TextFormField(
-                        controller: _passwordController,
-                        obscureText: true,
-                        decoration: const InputDecoration(
-                          labelText: 'Password',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(10)),
-                          ),
-                          suffixIcon: Icon(Icons.visibility_off),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your password';
-                          }
-                          return null;
-                        },
-                      ),
                       const SizedBox(height: 20.0),
                       ElevatedButton(
-                        onPressed: _signInPressed,
+                        onPressed: _sendPasswordResetEmail,
                         style: ElevatedButton.styleFrom(
                           minimumSize: const Size(double.infinity, 50),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: const Text('Sign In'),
+                        child: const Text('Send Reset Link'),
                       ),
                       const SizedBox(height: 20.0),
                       TextButton(
-                        onPressed: _showForgotPasswordSheet,
-                        child: const Text("Don't have an account?"),
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: const Text("Back to Sign In"),
                       ),
                     ],
                   ),
