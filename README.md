@@ -1,21 +1,25 @@
 
 # NCBA News Clone (Development Source)
 
-A Clone Project NCBA News App.
+Final Year Project of a News App.
 
 
 
 ## Introduction
 
-This project is a clone app for ncba app in flutter currently optimised for Android, IOS and Web. Project features a backend from firebase (owned by developer).
+This project is a app for NCBA&E FYP in flutter currently optimised and available for Android only. Project features a backend from firebase.
 
 ## Features
-
-- Device Responsive
-- Latest Material UI Support
-- In-App Admin Panel
-- Cross platform (Android, IOS, Web)
-- Serverless Backend (Firebase)
+- Latest Material UI support.
+- In-App admin panel.
+- Serverless fackend (Firebase).
+- Categorial filtering.
+- Save as favourite.
+- Three step easy news editor.
+- Full contols for admins.
+- Easy news management for publishers.
+- Discussion/Comments for each article.
+- Profile management and data control.
 
 
 
@@ -25,13 +29,17 @@ This project is a clone app for ncba app in flutter currently optimised for Andr
 - Login
 - Signup
 - Forgot Password
-- Add News
-- Profile
+- Verification Screen (Email is not verified)
+- No Network Screen (When network is unavailable)
+- News Editor Screen
+- News Details Screen
 
 #### Home Sections
 - Feed
 - Saved
-- My News
+- Categories
+- Profile
+- Publishing Portal
 - Admin (only for authorized admins)
 ## Important
 
