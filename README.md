@@ -46,5 +46,5 @@ This project is a app for NCBA&E FYP in flutter currently optimised and availabl
 ``` This project is under development. Source code doesn't represent the final product and there are many aspects yet to be implemented. Bugs and glitches are expected. ```
 ## Authors
 
-- [@tensor35](https://www.github.com/tensor35)
+- [@sillydrycoder](https://www.github.com/sillydrycoder)
 
