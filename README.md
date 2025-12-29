@@ -1,7 +1,7 @@
 
-# NCBA News Clone (Development Source)
+# NCBA E-News: Mobile News Application System - Final Year Project
 
-Final Year Project of a News App.
+A comprehensive mobile news application developed as a Final Year Project, featuring real-time content management, user authentication, and administrative controls.
 
 
 
